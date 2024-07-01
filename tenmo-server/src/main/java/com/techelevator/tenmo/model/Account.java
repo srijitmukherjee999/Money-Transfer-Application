@@ -35,4 +35,10 @@ public class Account {
     public void setBalance(double balance) {
         this.balance = balance;
     }
+    public void setIncreasedBalance(double balance){
+        this.balance += balance;
+    }
+    public void setDecreasedBalance(double balance){
+        this.balance -= balance;
+    }
 }

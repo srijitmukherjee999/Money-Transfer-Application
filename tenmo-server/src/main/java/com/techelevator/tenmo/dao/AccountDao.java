@@ -11,6 +11,7 @@ public interface AccountDao {
    // List<Account> getAccounts();
     double getAccountBalanceById(int id);
     Account getAccountbyUserId(int userId);
+   // Account getAccountbyUserName(String name);
 
 
 }

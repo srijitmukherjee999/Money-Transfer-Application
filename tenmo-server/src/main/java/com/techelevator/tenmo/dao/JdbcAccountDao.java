@@ -21,7 +21,7 @@ public class JdbcAccountDao implements AccountDao {
     @Override
     public double getAccountBalanceById(int id) {
         Account account = null;
-        String sql = "SELECT * FROM account WHERE id = ?";
+        String sql = "SELECT * FROM account WHERE account_id = ?";
 
         try{
             SqlRowSet results = jdbcTemplate.queryForRowSet(sql,id);
@@ -39,7 +39,7 @@ public class JdbcAccountDao implements AccountDao {
     @Override
     public Account getAccountbyUserId(int userId) {
         Account account = null;
-        String sql = "SELECT * FROM account WERE user_id = ?";
+        String sql = "SELECT * FROM account WHERE user_id = ?";
         try{
             SqlRowSet results = jdbcTemplate.queryForRowSet(sql,userId);
             while(results.next()){
@@ -54,11 +54,17 @@ public class JdbcAccountDao implements AccountDao {
 
     }
 
+//    @Override
+//    public Account getAccountbyUserName(String name) {
+//        Account account = null;
+//    }
 
-    public Account mapByRow(SqlRowSet result){
+
+    private Account mapByRow(SqlRowSet result){
         Account account1 = new Account();
         account1.setBalance(result.getDouble("balance"));
         account1.setId(result.getInt("account_id"));
         account1.setUserId(result.getInt("user_id"));
+        return account1;
     }
 }
