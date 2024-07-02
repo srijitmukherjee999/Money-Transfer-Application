@@ -72,3 +72,34 @@ INSERT INTO transfer_type (transfer_type_desc) VALUES ('Request');
 INSERT INTO transfer_type (transfer_type_desc) VALUES ('Send');
 
 COMMIT;
+
+
+SELECT * FROM transfer
+
+INSERT INTO transfer (transfer_type_id , transfer_status_id, account_from,account_to,amount)
+VALUES (?,?,(  SELECT account_id FROM tenmo_user JOIN account USING(user_id) WHERE username = ?), 
+			(SELECT account_id FROM tenmo_user JOIN account USING (user_id) WHERE username = ?),?) 
+					  (
+						  SELECT account_id FROM tenmo_user JOIN account USING(user_id) WHERE username = ?
+					  ),
+              (
+				  SELECT account_id FROM tenmo_user JOIN account USING (user_id) WHERE username = ?
+			  ),amount) 
+              VALUES(?,?,?,?,?) RETURNING transfer_id  ;
+
+
+SELECT transfer_type_id,transfer_status_id,(SELECT username FROM tenmo_user JOIN account USING (user_id) JOIN transfer ON account_id = account_from) AS username_from,
+(SELECT username FROM tenmo_user JOIN account USING (user_id) JOIN transfer ON account_id = account_to) AS username_to,amount, transfer_type_desc,transfer_status_desc 
+FROM transfer_type JOIN transfer USING(transfer_type_id) JOIN transfer_status USING(transfer_status_id);
+
+SELECT username FROM tenmo_user JOIN account USING (user_id) JOIN transfer ON account_id = account_from WHERE transfer_id = 3007;
+SELECT username FROM tenmo_user JOIN account USING (user_id) JOIN transfer ON account_id = account_to WHERE transfer_id =3007
+
+select transfer_id,tbluser_from.username as username_from, tble2tenmo_user.username as username_to,amount, transfer_type_id,transfer_status_id,transfer_status_desc,transfer_type_desc from 
+transfer inner join 
+account as tblaccount_from on account_from=tblaccount_from.account_id inner join 
+tenmo_user as tbluser_from on tblaccount_from.user_id=tbluser_from.user_id 
+inner join account as tbl2account_from on account_to = tbl2account_from.account_id 
+JOIN tenmo_user AS tble2tenmo_user on tbl2account_from.user_id = tble2tenmo_user.user_id JOIN transfer_type USING(transfer_type_id)
+JOIN transfer_status USING(transfer_status_id)
+

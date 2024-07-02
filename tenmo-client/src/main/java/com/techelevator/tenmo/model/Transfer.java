@@ -2,48 +2,20 @@ package com.techelevator.tenmo.model;
 
 public class Transfer {
 
-    private int id;
-    private int transferTypeId;
-    private int transferStatusId;
+
     private String usernameFrom;
     private String usernameTo;
     private double amount;
     private String transferStatusName;
     private String transferTypeName;
 
-    public Transfer(int id, int transferTypeId, int transferStatusId, String usernameFrom, String usernameTo, double amount, String transferStatusName, String transferTypeName) {
-        this.id = id;
-        this.transferTypeId = transferTypeId;
-        this.transferStatusId = transferStatusId;
+    public Transfer(String usernameFrom, String usernameTo, double amount, String transferStatusName, String transferTypeName) {
+
         this.usernameFrom = usernameFrom;
         this.usernameTo = usernameTo;
         this.amount = amount;
         this.transferStatusName = transferStatusName;
         this.transferTypeName = transferTypeName;
-    }
-
-    public int getId() {
-        return id;
-    }
-
-    public void setId(int id) {
-        this.id = id;
-    }
-
-    public int getTransferTypeId() {
-        return transferTypeId;
-    }
-
-    public void setTransferTypeId(int transferTypeId) {
-        this.transferTypeId = transferTypeId;
-    }
-
-    public int getTransferStatusId() {
-        return transferStatusId;
-    }
-
-    public void setTransferStatusId(int transferStatusId) {
-        this.transferStatusId = transferStatusId;
     }
 
 

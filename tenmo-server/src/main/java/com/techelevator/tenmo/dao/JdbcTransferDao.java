@@ -30,12 +30,12 @@ public class JdbcTransferDao implements TransferDao{
     @Override
     public Transfer getTransferById(int id) {
         Transfer transfer = null;
-        String sql = "SELECT transfer_type_id,transfer_status_id,(SELECT username FROM tenmo_user JOIN account USING (user_id) JOIN transfer ON account_id = account_from) AS username_from," +
-                "(SELECT username FROM tenmo_user JOIN account USING (user_id) JOIN transfer ON account_id = account_to) AS username_to,amount, transfer_type_desc,transfer_status_desc " +
+        String sql = "SELECT transfer_id,transfer_type_id,transfer_status_id,(SELECT username FROM tenmo_user JOIN account USING (user_id) JOIN transfer ON account_id = account_from WHERE transfer_id =?) AS username_from," +
+                "(SELECT username FROM tenmo_user JOIN account USING (user_id) JOIN transfer ON account_id = account_to WHERE transfer_id =?) AS username_to,amount, transfer_type_desc,transfer_status_desc " +
                 "FROM transfer_type JOIN transfer USING(transfer_type_id) JOIN transfer_status USING(transfer_status_id) WHERE transfer_id = ?;";
 
         try{
-            SqlRowSet results = jdbcTemplate.queryForRowSet(sql);
+            SqlRowSet results = jdbcTemplate.queryForRowSet(sql,id,id,id);
             while(results.next()){
                 transfer = mapByRow(results);
             }
@@ -51,9 +51,13 @@ public class JdbcTransferDao implements TransferDao{
     public List<Transfer> getListOfTransfersBySentOrReceived() {
 
         List<Transfer> listOfTransfers = new ArrayList<>();
-        String sql = "SELECT transfer_type_id,transfer_status_id,(SELECT username FROM tenmo_user JOIN account USING (user_id) JOIN transfer ON account_id = account_from) AS username_from," +
-                "(SELECT username FROM tenmo_user JOIN account USING (user_id) JOIN transfer ON account_id = account_to) AS username_to,amount, transfer_type_desc,transfer_status_desc" +
-                "FROM transfer_type JOIN transfer USING(transfer_type_id) JOIN transfer_status USING(transfer_status_id) WHERE transfer_status_desc != 'Pending';";
+        String sql = "SELECT transfer_id,tbluser_from.username as username_from, tble2tenmo_user.username as username_to,amount, transfer_type_id,transfer_status_id,transfer_status_desc,transfer_type_desc from \n" +
+                "transfer JOIN " +
+                "account as tblaccount_from on account_from=tblaccount_from.account_id JOIN " +
+                "tenmo_user as tbluser_from on tblaccount_from.user_id=tbluser_from.user_id " +
+                "JOIN account as tbl2account_from on account_to = tbl2account_from.account_id " +
+                "JOIN tenmo_user AS tble2tenmo_user on tbl2account_from.user_id = tble2tenmo_user.user_id JOIN transfer_type USING(transfer_type_id)" +
+                "JOIN transfer_status USING(transfer_status_id) WHERE transfer_status_desc != 'Pending';";
         try{
             SqlRowSet results = jdbcTemplate.queryForRowSet(sql);
             while(results.next()){
@@ -77,19 +81,20 @@ public class JdbcTransferDao implements TransferDao{
 
     @Override
     public Transfer createTransferByUserName(Transfer transfer,Principal principal) {
-       User user =  userDao.getUserByUsername(transfer.getUsernameTo());
+       //User user =  userDao.getUserByUsername(transfer.getUsernameTo());
        Transfer transfer1 = new Transfer();
 
-      Account account = accountDao.getAccountbyUserId(user.getId()) ;
+//      Account account = accountDao.getAccountbyUserId(user.getId()) ;
+//
+//      User user1 = userDao.getUserByUsername(principal.getName());
+//
+//      Account account1 = accountDao.getAccountbyUserId(user1.getId());
 
-      User user1 = userDao.getUserByUsername(principal.getName());
-
-      Account account1 = accountDao.getAccountbyUserId(user1.getId());
-
-      String sql = "INSERT INTO transfer (transfer_type_id , transfer_status_id,account_from, account_to,amount) " +
-              "VALUES(?,?,?,?,?) RETURNING transfer_id = ?;";
+      String sql = "INSERT INTO transfer (transfer_type_id , transfer_status_id, account_from,account_to,amount) " +
+              "VALUES (?,?,(  SELECT account_id FROM tenmo_user JOIN account USING(user_id) WHERE username = ?), " +
+              "(SELECT account_id FROM tenmo_user JOIN account USING (user_id) WHERE username = ?),?)  RETURNING transfer_id ;";
        int update = jdbcTemplate.queryForObject(sql,int.class, transfer.getTransferTypeId(),transfer.getTransferStatusId(),
-               account1.getId(),account.getId(),transfer.getAmount());
+               principal.getName(),transfer.getUsernameTo(),transfer.getAmount());
 
        transfer1 = getTransferById(update);
        return transfer1;
@@ -99,9 +104,13 @@ public class JdbcTransferDao implements TransferDao{
     public List<Transfer> getListOfTransfersByPending() {
 
         List<Transfer> listOfTransfers = new ArrayList<>();
-        String sql = "SELECT transfer_type_id,transfer_status_id,(SELECT username FROM tenmo_user JOIN account USING (user_id) JOIN transfer ON account_id = account_from) AS username_from," +
-                "(SELECT username FROM tenmo_user JOIN account USING (user_id) JOIN transfer ON account_id = account_to) AS username_to,amount, transfer_type_desc,transfer_status_desc" +
-                "FROM transfer_type JOIN transfer USING(transfer_type_id) JOIN transfer_status USING(transfer_status_id) WHERE transfer_status_desc = 'Pending';";
+        String sql = "SELECT transfer_id,tbluser_from.username as username_from, tble2tenmo_user.username as username_to,amount, transfer_type_id,transfer_status_id,transfer_status_desc,transfer_type_desc from \n" +
+                "transfer JOIN " +
+                "account as tblaccount_from on account_from=tblaccount_from.account_id JOIN " +
+                "tenmo_user as tbluser_from on tblaccount_from.user_id=tbluser_from.user_id " +
+                "JOIN account as tbl2account_from on account_to = tbl2account_from.account_id " +
+                "JOIN tenmo_user AS tble2tenmo_user on tbl2account_from.user_id = tble2tenmo_user.user_id JOIN transfer_type USING(transfer_type_id)" +
+                "JOIN transfer_status USING(transfer_status_id) WHERE transfer_status_desc = 'Pending'";
         try{
             SqlRowSet results = jdbcTemplate.queryForRowSet(sql);
             while(results.next()){

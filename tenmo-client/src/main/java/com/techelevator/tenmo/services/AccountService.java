@@ -56,7 +56,7 @@ public class AccountService {
         header.setBearerAuth(token);
         HttpEntity<Transfer> entity = new HttpEntity<>(transfer,header);
         try{
-            ResponseEntity<Transfer> response = restTemplate.exchange(url + "/transfer/send",HttpMethod.POST,entity, Transfer.class);
+            HttpEntity<Transfer> response = restTemplate.exchange(url + "/transfer/send",HttpMethod.POST,entity, Transfer.class);
             returnTransfer = response.getBody();
         }catch (RestClientResponseException | ResourceAccessException e) {
             BasicLogger.log(e.getMessage());
@@ -68,7 +68,7 @@ public class AccountService {
     public Transfer[] listOfTansfersSentOrReceived(){
         Transfer[] newTransfer = null;
         try{
-           HttpEntity<Transfer[]> response = restTemplate.exchange(url + "/transfer", HttpMethod.GET,makeAuthEntity(),Transfer[].class);
+           ResponseEntity<Transfer[]> response = restTemplate.exchange(url + "/transfer", HttpMethod.GET,makeAuthEntity(),Transfer[].class);
              newTransfer = response.getBody();
         }catch (RestClientResponseException | ResourceAccessException e) {
             BasicLogger.log(e.getMessage());
@@ -80,7 +80,7 @@ public class AccountService {
     public Transfer getTransferById(int id){
         Transfer transfer = null;
         try{
-            HttpEntity<Transfer> response = restTemplate.exchange(url + "/transfer/" + id,HttpMethod.GET,makeAuthEntity(), Transfer.class);
+            ResponseEntity<Transfer> response = restTemplate.exchange(url + "/transfer/" + id,HttpMethod.GET,makeAuthEntity(), Transfer.class);
            transfer = response.getBody();
         }catch (RestClientResponseException | ResourceAccessException e) {
             BasicLogger.log(e.getMessage());
@@ -88,7 +88,45 @@ public class AccountService {
         return transfer;
     }
 
-    
+    public Transfer pendingAmount(Transfer transfer){
+        Transfer newTransfer = null;
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(token);
+        HttpEntity<Transfer> entity = new HttpEntity<>(transfer,headers);
+        try{
+           HttpEntity<Transfer> response = restTemplate.exchange(url + "/transfer/request",HttpMethod.POST,entity, Transfer.class);
+           newTransfer = response.getBody();
+        }catch (RestClientResponseException | ResourceAccessException e) {
+            BasicLogger.log(e.getMessage());
+        }
+        return newTransfer;
+
+    }
+
+    public Transfer[] listOfPendingTransfers(){
+        Transfer[] newTransfer = null;
+        try{
+            ResponseEntity<Transfer[]> response = restTemplate.exchange(url + "/transfer/pending", HttpMethod.GET,makeAuthEntity(),Transfer[].class);
+            newTransfer = response.getBody();
+        }catch (RestClientResponseException | ResourceAccessException e) {
+            BasicLogger.log(e.getMessage());
+        }
+        return newTransfer;
+    }
+
+//    public Transfer receivedAmount(Transfer transfer){
+//      boolean success = false;
+//      try{
+//          restTemplate.put(url + "/transfer/request", transfer.get, )
+//      }
+//
+//    }
+
+
+
+
+
 
 
     private HttpEntity<Void> makeAuthEntity(){
