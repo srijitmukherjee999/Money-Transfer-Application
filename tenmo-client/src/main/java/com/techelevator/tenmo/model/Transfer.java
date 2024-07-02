@@ -5,25 +5,22 @@ public class Transfer {
     private int id;
     private int transferTypeId;
     private int transferStatusId;
-    private String usernameFrom;
-    private String usernameTo;
+    private int accountFrom;
+    private int accountTo;
     private double amount;
     private String transferStatusName;
     private String transferTypeName;
 
-
-    public Transfer(int id, int transferTypeId, int transferStatusId, String usernameFrom, String usernameTo, double amount, String transferStatusName, String transferTypeName) {
+    public Transfer(int id, int transferTypeId, int transferStatusId, int accountFrom, int accountTo, double amount, String transferStatusName, String transferTypeName) {
         this.id = id;
         this.transferTypeId = transferTypeId;
         this.transferStatusId = transferStatusId;
-        this.usernameFrom = usernameFrom;
-        this.usernameTo= usernameTo;
+        this.accountFrom = accountFrom;
+        this.accountTo = accountTo;
         this.amount = amount;
         this.transferStatusName = transferStatusName;
         this.transferTypeName = transferTypeName;
-
     }
-   public Transfer(){};
 
     public int getId() {
         return id;
@@ -49,6 +46,21 @@ public class Transfer {
         this.transferStatusId = transferStatusId;
     }
 
+    public int getAccountFrom() {
+        return accountFrom;
+    }
+
+    public void setAccountFrom(int accountFrom) {
+        this.accountFrom = accountFrom;
+    }
+
+    public int getAccountTo() {
+        return accountTo;
+    }
+
+    public void setAccountTo(int accountTo) {
+        this.accountTo = accountTo;
+    }
 
     public double getAmount() {
         return amount;
@@ -57,7 +69,6 @@ public class Transfer {
     public void setAmount(double amount) {
         this.amount = amount;
     }
-
 
     public String getTransferStatusName() {
         return transferStatusName;
@@ -73,21 +84,5 @@ public class Transfer {
 
     public void setTransferTypeName(String transferTypeName) {
         this.transferTypeName = transferTypeName;
-    }
-
-    public String getUsernameFrom() {
-        return usernameFrom;
-    }
-
-    public void setUsernameFrom(String usernameFrom) {
-        this.usernameFrom = usernameFrom;
-    }
-
-    public String getUsernameTo() {
-        return usernameTo;
-    }
-
-    public void setUsernameTo(String usernameTo) {
-        this.usernameTo = usernameTo;
     }
 }

@@ -80,7 +80,7 @@ public class ConsoleService {
     }
 
     public void pause() {
-        System.out.println("\nPress Enter to continue...");
+        System.out.println("Press Enter to continue...");
         scanner.nextLine();
     }
 
@@ -89,3 +89,25 @@ public class ConsoleService {
     }
 
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

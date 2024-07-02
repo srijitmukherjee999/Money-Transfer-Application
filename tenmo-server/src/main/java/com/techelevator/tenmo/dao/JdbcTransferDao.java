@@ -30,8 +30,9 @@ public class JdbcTransferDao implements TransferDao{
     @Override
     public Transfer getTransferById(int id) {
         Transfer transfer = null;
-        String sql = "SELECT * FROM transfer_type JOIN transfer ON transfer_type_id = transfer_id " +
-                "JOIN transfer_status ON transfer_id = transfer_status_id WHERE id = ?";
+        String sql = "SELECT transfer_type_id,transfer_status_id,(SELECT username FROM tenmo_user JOIN account USING (user_id) JOIN transfer ON account_id = account_from) AS username_from," +
+                "(SELECT username FROM tenmo_user JOIN account USING (user_id) JOIN transfer ON account_id = account_to) AS username_to,amount, transfer_type_desc,transfer_status_desc " +
+                "FROM transfer_type JOIN transfer USING(transfer_type_id) JOIN transfer_status USING(transfer_status_id) WHERE transfer_id = ?;";
 
         try{
             SqlRowSet results = jdbcTemplate.queryForRowSet(sql);
@@ -47,11 +48,12 @@ public class JdbcTransferDao implements TransferDao{
     }
 
     @Override
-    public List<Transfer> getListOfTransfers() {
+    public List<Transfer> getListOfTransfersBySentOrReceived() {
 
         List<Transfer> listOfTransfers = new ArrayList<>();
-        String sql = "SELECT * FROM transfer_type JOIN transfer ON transfer_type_id = transfer_id " +
-                "JOIN transfer_status ON transfer_id = transfer_status_id";
+        String sql = "SELECT transfer_type_id,transfer_status_id,(SELECT username FROM tenmo_user JOIN account USING (user_id) JOIN transfer ON account_id = account_from) AS username_from," +
+                "(SELECT username FROM tenmo_user JOIN account USING (user_id) JOIN transfer ON account_id = account_to) AS username_to,amount, transfer_type_desc,transfer_status_desc" +
+                "FROM transfer_type JOIN transfer USING(transfer_type_id) JOIN transfer_status USING(transfer_status_id) WHERE transfer_status_desc != 'Pending';";
         try{
             SqlRowSet results = jdbcTemplate.queryForRowSet(sql);
             while(results.next()){
@@ -66,6 +68,7 @@ public class JdbcTransferDao implements TransferDao{
         return listOfTransfers;
     }
 
+
     @Override
     public Transfer getTransferbyUserId(int id) {
       Account account =  accountDao.getAccountbyUserId(id);
@@ -73,8 +76,8 @@ public class JdbcTransferDao implements TransferDao{
     }
 
     @Override
-    public Transfer createSendTransferByUserName(String name,Transfer transfer,Principal principal) {
-       User user =  userDao.getUserByUsername(name);
+    public Transfer createTransferByUserName(Transfer transfer,Principal principal) {
+       User user =  userDao.getUserByUsername(transfer.getUsernameTo());
        Transfer transfer1 = new Transfer();
 
       Account account = accountDao.getAccountbyUserId(user.getId()) ;
@@ -84,39 +87,63 @@ public class JdbcTransferDao implements TransferDao{
       Account account1 = accountDao.getAccountbyUserId(user1.getId());
 
       String sql = "INSERT INTO transfer (transfer_type_id , transfer_status_id,account_from, account_to,amount) " +
-              "VALUES(?,?,?,?,?) RETURNING transfer_id;";
-       int update = jdbcTemplate.queryForObject(sql,int.class, 2,2,account1.getId(),account.getId(),transfer.getAmount());
+              "VALUES(?,?,?,?,?) RETURNING transfer_id = ?;";
+       int update = jdbcTemplate.queryForObject(sql,int.class, transfer.getTransferTypeId(),transfer.getTransferStatusId(),
+               account1.getId(),account.getId(),transfer.getAmount());
 
        transfer1 = getTransferById(update);
        return transfer1;
     }
 
     @Override
-    public Transfer createReceiveTransferByUserName(String name, Transfer transfer, Principal principal) {
-        User user =  userDao.getUserByUsername(name);
-        Transfer transfer1 = new Transfer();
+    public List<Transfer> getListOfTransfersByPending() {
 
-        Account account = accountDao.getAccountbyUserId(user.getId()) ;
+        List<Transfer> listOfTransfers = new ArrayList<>();
+        String sql = "SELECT transfer_type_id,transfer_status_id,(SELECT username FROM tenmo_user JOIN account USING (user_id) JOIN transfer ON account_id = account_from) AS username_from," +
+                "(SELECT username FROM tenmo_user JOIN account USING (user_id) JOIN transfer ON account_id = account_to) AS username_to,amount, transfer_type_desc,transfer_status_desc" +
+                "FROM transfer_type JOIN transfer USING(transfer_type_id) JOIN transfer_status USING(transfer_status_id) WHERE transfer_status_desc = 'Pending';";
+        try{
+            SqlRowSet results = jdbcTemplate.queryForRowSet(sql);
+            while(results.next()){
+                listOfTransfers.add(mapByRow(results));
+            }
+        }catch(DataIntegrityViolationException e) {
+            throw new DaoException("That park is already in that state!", e);
+        } catch (CannotGetJdbcConnectionException e) {
+            throw new DaoException("Database not found!", e);
+        }
 
-        User user1 = userDao.getUserByUsername(principal.getName());
-
-        Account account1 = accountDao.getAccountbyUserId(user1.getId());
-
-        String sql = "INSERT INTO transfer (transfer_type_id , transfer_status_id,account_from, account_to,amount) " +
-                "VALUES(?,?,?,?,?) RETURNING transfer_id;";
-        int update = jdbcTemplate.queryForObject(sql,int.class, 1,1,account1.getId(),account.getId(),transfer.getAmount());
-
-        transfer1 = getTransferById(update);
-        return transfer1;
+        return listOfTransfers;
     }
+
+
+//    @Override
+//    public Transfer createReceiveTransferByUserName(String name, Transfer transfer, Principal principal) {
+//        User user =  userDao.getUserByUsername(name);
+//        Transfer transfer1 = new Transfer();
+//
+//        Account account = accountDao.getAccountbyUserId(user.getId()) ;
+//
+//        User user1 = userDao.getUserByUsername(principal.getName());
+//
+//        Account account1 = accountDao.getAccountbyUserId(user1.getId());
+//
+//        String sql = "INSERT INTO transfer (transfer_type_id , transfer_status_id,account_from, account_to,amount) " +
+//                "VALUES(?,?,?,?,?) RETURNING transfer_id = ?;";
+//        int update = jdbcTemplate.queryForObject(sql,int.class, transfer.getTransferTypeId(),transfer.getTransferStatusId(),
+//                account1.getId(),account.getId(),transfer.getAmount());
+//
+//        transfer1 = getTransferById(update);
+//        return transfer1;
+//    }
 
 
     private Transfer mapByRow(SqlRowSet result){
         Transfer transfer = new Transfer();
         transfer.setId(result.getInt("transfer_id"));
         transfer.setAmount(result.getDouble("amount"));
-        transfer.setAccountFrom(result.getInt("account_from"));
-        transfer.setAccountTo(result.getInt("account_to"));
+        transfer.setUsernameFrom(result.getString("username_from"));
+        transfer.setUsernameTo(result.getString("username_to"));
         transfer.setTransferStatusId(result.getInt("transfer_status_id"));
         transfer.setTransferStatusName(result.getString("transfer_status_desc"));
         transfer.setTransferTypeId(result.getInt("transfer_type_id"));

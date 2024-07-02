@@ -6,6 +6,7 @@ import com.techelevator.tenmo.model.Account;
 import com.techelevator.tenmo.model.Transfer;
 import com.techelevator.tenmo.model.User;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -15,6 +16,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @RestController
+@PreAuthorize("isAuthenticated()")
 public class TransactionController {
 
     private AccountDao accountDao;
@@ -46,15 +48,18 @@ public class TransactionController {
     @RequestMapping(path = "/transfer/send", method =  RequestMethod.POST)
     public Transfer sendAmount(@Valid @RequestParam(defaultValue = "") String name, @RequestBody Transfer transfer, Principal principal){
         Transfer newTransfer = new Transfer();
-        if(transfer.getAmount()>0 && (!principal.getName().equals(name))) {
+        User userFrom = userDao.getUserByUsername(principal.getName());
+        Account accountFrom = accountDao.getAccountbyUserId(userFrom.getId());
+        if(transfer.getAmount()>0 && (!principal.getName().equals(name)) && transfer.getAmount()<= accountFrom.getBalance()) {
 
            User user = userDao.getUserByUsername(name);
            Account account = accountDao.getAccountbyUserId(user.getId());
            account.setIncreasedBalance(transfer.getAmount());
-            User userFrom = userDao.getUserByUsername(principal.getName());
-            Account accountFrom = accountDao.getAccountbyUserId(userFrom.getId());
+
             accountFrom.setDecreasedBalance(transfer.getAmount());
-            newTransfer = transferDao.createSendTransferByUserName(name, transfer, principal);
+            transfer.setTransferStatusId(2);// Approved
+            transfer.setTransferTypeId(2); // Sending money
+            newTransfer = transferDao.createTransferByUserName(transfer, principal);
 
         }
         return newTransfer;
@@ -63,7 +68,7 @@ public class TransactionController {
 
     @RequestMapping(path = "/transfer",method = RequestMethod.GET)
     public List<Transfer> getListOfTransfers(){
-        return transferDao.getListOfTransfers();
+        return transferDao.getListOfTransfersBySentOrReceived();
     }
 
     @RequestMapping(path = "/transfer/{id}",method = RequestMethod.GET)
@@ -76,7 +81,49 @@ public class TransactionController {
         }
     }
 
-    //@RequestMapping(path = "/transfer/request", method = RequestMethod.GET)
+    @RequestMapping(path = "/transfer/request", method = RequestMethod.POST)
+    public Transfer receiveAmount(@RequestBody Transfer transfer,Principal principal){
+        Transfer newTransfer = new Transfer();
+        if(transfer.getAmount()>0 && (!principal.getName().equals(transfer.getUsernameTo()))) {
+            transfer.setTransferStatusId(1); //Pending
+            transfer.setTransferTypeId(1); // Requesting money
+            newTransfer = transferDao.createTransferByUserName(transfer,principal);
+        }
+        return newTransfer;
+    }
+
+    @RequestMapping(path = "/transfer/pending", method = RequestMethod.GET)
+    public List<Transfer> getListOfPendingTransfers(){
+
+        try {
+            return transferDao.getListOfTransfersByPending();
+
+        }catch(DaoException e){
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        }
+
+    }
+
+
+    @RequestMapping(path = "/transfer/request", method = RequestMethod.PUT)
+     public Transfer responseToRequest(@RequestParam(defaultValue = "")String name,@RequestBody Transfer transfer,Principal principal){
+        Transfer newTransfer = new Transfer();
+        User userFrom = userDao.getUserByUsername(principal.getName());
+        Account accountFrom = accountDao.getAccountbyUserId(userFrom.getId());
+        if(accountFrom.getBalance() < transfer.getAmount()){
+            transfer.setTransferStatusId(3); //Rejected
+        }else{
+            transfer.setTransferStatusId(2);//Approved
+            User userRequester = userDao.getUserByUsername(name);
+            Account accountRequester = accountDao.getAccountbyUserId(userRequester.getId());
+            accountRequester.setIncreasedBalance(transfer.getAmount());
+
+            accountFrom.setDecreasedBalance(transfer.getAmount());
+            newTransfer = transferDao.createTransferByUserName(transfer,principal);
+        }
+        return newTransfer;
+    }
+
 
 
 
