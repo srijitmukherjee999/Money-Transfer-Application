@@ -46,13 +46,13 @@ public class TransactionController {
     }
     @ResponseStatus(HttpStatus.CREATED)
     @RequestMapping(path = "/transfer/send", method =  RequestMethod.POST)
-    public Transfer sendAmount(@Valid @RequestParam(defaultValue = "") String name, @RequestBody Transfer transfer, Principal principal){
+    public Transfer sendAmount(@RequestBody Transfer transfer, Principal principal){
         Transfer newTransfer = new Transfer();
         User userFrom = userDao.getUserByUsername(principal.getName());
         Account accountFrom = accountDao.getAccountbyUserId(userFrom.getId());
-        if(transfer.getAmount()>0 && (!principal.getName().equals(name)) && transfer.getAmount()<= accountFrom.getBalance()) {
+        if(transfer.getAmount()>0 && (!principal.getName().equals(transfer.getUsernameTo())) && transfer.getAmount()<= accountFrom.getBalance()) {
 
-           User user = userDao.getUserByUsername(name);
+           User user = userDao.getUserByUsername(transfer.getUsernameTo());
            Account account = accountDao.getAccountbyUserId(user.getId());
            account.setIncreasedBalance(transfer.getAmount());
 
@@ -106,7 +106,7 @@ public class TransactionController {
 
 
     @RequestMapping(path = "/transfer/request", method = RequestMethod.PUT)
-     public Transfer responseToRequest(@RequestParam(defaultValue = "")String name,@RequestBody Transfer transfer,Principal principal){
+     public Transfer responseToRequest(@RequestBody Transfer transfer,Principal principal){
         Transfer newTransfer = new Transfer();
         User userFrom = userDao.getUserByUsername(principal.getName());
         Account accountFrom = accountDao.getAccountbyUserId(userFrom.getId());
@@ -114,7 +114,7 @@ public class TransactionController {
             transfer.setTransferStatusId(3); //Rejected
         }else{
             transfer.setTransferStatusId(2);//Approved
-            User userRequester = userDao.getUserByUsername(name);
+            User userRequester = userDao.getUserByUsername(transfer.getUsernameTo());
             Account accountRequester = accountDao.getAccountbyUserId(userRequester.getId());
             accountRequester.setIncreasedBalance(transfer.getAmount());
 
