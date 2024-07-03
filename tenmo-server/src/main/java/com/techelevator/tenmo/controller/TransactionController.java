@@ -54,9 +54,11 @@ public class TransactionController {
 
            User user = userDao.getUserByUsername(transfer.getUsernameTo());
            Account account = accountDao.getAccountbyUserId(user.getId());
-           account.setIncreasedBalance(transfer.getAmount());
+             account.setIncreasedBalance(transfer.getAmount());
+             accountDao.updateAccountBalance(account);//updates account balance in DB
 
             accountFrom.setDecreasedBalance(transfer.getAmount());
+            accountDao.updateAccountBalance(accountFrom);//updates account balance in DB
             transfer.setTransferStatusId(2);// Approved
             transfer.setTransferTypeId(2); // Sending money
             newTransfer = transferDao.createTransferByUserName(transfer, principal);
@@ -97,11 +99,9 @@ public class TransactionController {
 
         try {
             return transferDao.getListOfTransfersByPending();
-
         }catch(DaoException e){
             throw new ResponseStatusException(HttpStatus.NOT_FOUND);
         }
-
     }
 
 

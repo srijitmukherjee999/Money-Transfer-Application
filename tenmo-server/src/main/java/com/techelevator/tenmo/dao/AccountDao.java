@@ -13,5 +13,7 @@ public interface AccountDao {
     Account getAccountbyUserId(int userId);
    // Account getAccountbyUserName(String name);
 
+    void updateAccountBalance(Account account);
+
 
 }

@@ -126,27 +126,6 @@ public class JdbcTransferDao implements TransferDao{
     }
 
 
-//    @Override
-//    public Transfer createReceiveTransferByUserName(String name, Transfer transfer, Principal principal) {
-//        User user =  userDao.getUserByUsername(name);
-//        Transfer transfer1 = new Transfer();
-//
-//        Account account = accountDao.getAccountbyUserId(user.getId()) ;
-//
-//        User user1 = userDao.getUserByUsername(principal.getName());
-//
-//        Account account1 = accountDao.getAccountbyUserId(user1.getId());
-//
-//        String sql = "INSERT INTO transfer (transfer_type_id , transfer_status_id,account_from, account_to,amount) " +
-//                "VALUES(?,?,?,?,?) RETURNING transfer_id = ?;";
-//        int update = jdbcTemplate.queryForObject(sql,int.class, transfer.getTransferTypeId(),transfer.getTransferStatusId(),
-//                account1.getId(),account.getId(),transfer.getAmount());
-//
-//        transfer1 = getTransferById(update);
-//        return transfer1;
-//    }
-
-
     private Transfer mapByRow(SqlRowSet result){
         Transfer transfer = new Transfer();
         transfer.setId(result.getInt("transfer_id"));
