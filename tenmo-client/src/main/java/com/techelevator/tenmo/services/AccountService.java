@@ -9,6 +9,7 @@ import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.client.RestTemplate;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -16,7 +17,7 @@ public class AccountService {
 
     private RestTemplate restTemplate = new RestTemplate() ;
 
-    private String url = "http://localhost8080" ;
+    private String url = "http://localhost:8080" ;
 
     private String token;
 
@@ -24,16 +25,16 @@ public class AccountService {
         this.token = token;
     }
 
-    public double getCurrentBalancebyId(int id){
-        Account account = null;
+    public BigDecimal getCurrentBalanceByUsername(String name){
+        BigDecimal balance = null;
         try{
-            ResponseEntity<Account> response = restTemplate.exchange(url + "/account/balance/" + id, HttpMethod.GET,makeAuthEntity(),Account.class);
-            account = response.getBody();
+            ResponseEntity<BigDecimal> response = restTemplate.exchange(url + "/account/balance?name=" + name, HttpMethod.GET,makeAuthEntity(),BigDecimal.class);
+            balance = response.getBody();
 
         }catch (RestClientResponseException | ResourceAccessException e) {
             BasicLogger.log(e.getMessage());
         }
-        return account.getBalance();
+        return balance;
     }
 
     public User[] getListOfUsers(){
@@ -115,17 +116,22 @@ public class AccountService {
         return newTransfer;
     }
 
-//    public Transfer receivedAmount(Transfer transfer){
-//      boolean success = false;
-//      try{
-//          restTemplate.put(url + "/transfer/request", transfer.get, )
-//      }
-//
-//    }
+    public int receivedAmount(Transfer transfer){
+      int success = 2;
 
+      HttpHeaders headers = new HttpHeaders();
+      headers.setContentType(MediaType.APPLICATION_JSON);
+      headers.setBearerAuth(token);
+      HttpEntity<Transfer> entity = new HttpEntity<>(transfer,headers);
 
-
-
+      try{
+         HttpEntity<Integer> response =restTemplate.exchange(url + "/transfer/request",HttpMethod.PUT,entity,int.class);
+             success = response.getBody();
+      }catch (RestClientResponseException | ResourceAccessException e) {
+          BasicLogger.log(e.getMessage());
+      }
+      return success;
+    }
 
 
 

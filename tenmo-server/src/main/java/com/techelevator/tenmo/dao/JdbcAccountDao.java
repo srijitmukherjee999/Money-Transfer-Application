@@ -8,6 +8,8 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.rowset.SqlRowSet;
 import org.springframework.stereotype.Component;
 
+import java.math.BigDecimal;
+
 @Component
 public class JdbcAccountDao implements AccountDao {
 
@@ -19,12 +21,12 @@ public class JdbcAccountDao implements AccountDao {
 
 
     @Override
-    public double getAccountBalanceById(int id) {
+    public BigDecimal getAccountBalanceByUsername(String name) {
         Account account = null;
-        String sql = "SELECT * FROM account WHERE account_id = ?";
+        String sql = "SELECT * FROM account WHERE user_id = (SELECT user_id FROM tenmo_user WHERE username = ? );";
 
         try{
-            SqlRowSet results = jdbcTemplate.queryForRowSet(sql,id);
+            SqlRowSet results = jdbcTemplate.queryForRowSet(sql, name);
             while(results.next()){
                 account = mapByRow(results);
             }
@@ -37,11 +39,11 @@ public class JdbcAccountDao implements AccountDao {
     }
 
     @Override
-    public Account getAccountbyUserId(int userId) {
+    public Account getAccountbyUserId(int id) {
         Account account = null;
-        String sql = "SELECT * FROM account WHERE user_id = ?";
+        String sql = "SELECT * FROM account WHERE user_id = ? ;";
         try{
-            SqlRowSet results = jdbcTemplate.queryForRowSet(sql,userId);
+            SqlRowSet results = jdbcTemplate.queryForRowSet(sql,id);
             while(results.next()){
                 account = mapByRow(results);
             }
@@ -71,7 +73,7 @@ public class JdbcAccountDao implements AccountDao {
 
     private Account mapByRow(SqlRowSet result){
         Account account1 = new Account();
-        account1.setBalance(result.getDouble("balance"));
+        account1.setBalance(result.getBigDecimal("balance"));
         account1.setId(result.getInt("account_id"));
         account1.setUserId(result.getInt("user_id"));
         return account1;

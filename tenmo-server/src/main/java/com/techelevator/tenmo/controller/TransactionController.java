@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 import javax.validation.Valid;
+import java.math.BigDecimal;
 import java.security.Principal;
 import java.util.ArrayList;
 import java.util.List;
@@ -29,10 +30,10 @@ public class TransactionController {
         this.userDao = jdbcUserDao;
     }
 
-    @RequestMapping(path = "/account/balance/{id}", method = RequestMethod.GET)
-    public double getAccountBalance(@PathVariable int id){
+    @RequestMapping(path = "/account/balance", method = RequestMethod.GET)
+    public BigDecimal getAccountBalance(@RequestParam String name){
         try {
-            double balance = accountDao.getAccountBalanceById(id);
+            BigDecimal balance = accountDao.getAccountBalanceByUsername(name);
             return balance;
         }catch(DaoException e){
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Account unavailable");
@@ -47,10 +48,10 @@ public class TransactionController {
     @ResponseStatus(HttpStatus.CREATED)
     @RequestMapping(path = "/transfer/send", method =  RequestMethod.POST)
     public Transfer sendAmount(@RequestBody Transfer transfer, Principal principal){
-        Transfer newTransfer = new Transfer();
+        Transfer newTransfer = null;
         User userFrom = userDao.getUserByUsername(principal.getName());
         Account accountFrom = accountDao.getAccountbyUserId(userFrom.getId());
-        if(transfer.getAmount()>0 && (!principal.getName().equals(transfer.getUsernameTo())) && transfer.getAmount()<= accountFrom.getBalance()) {
+        if(transfer.getAmount().doubleValue()>0.00 && (!principal.getName().equals(transfer.getUsernameTo())) && transfer.getAmount().compareTo(accountFrom.getBalance())<=0 ) {
 
            User user = userDao.getUserByUsername(transfer.getUsernameTo());
            Account account = accountDao.getAccountbyUserId(user.getId());
@@ -69,8 +70,8 @@ public class TransactionController {
     }
 
     @RequestMapping(path = "/transfer",method = RequestMethod.GET)
-    public List<Transfer> getListOfTransfers(){
-        return transferDao.getListOfTransfersBySentOrReceived();
+    public List<Transfer> getListOfTransfers(Principal principal){
+        return transferDao.getListOfTransfersBySentOrReceived(principal);
     }
 
     @RequestMapping(path = "/transfer/{id}",method = RequestMethod.GET)
@@ -84,9 +85,9 @@ public class TransactionController {
     }
 
     @RequestMapping(path = "/transfer/request", method = RequestMethod.POST)
-    public Transfer receiveAmount(@RequestBody Transfer transfer,Principal principal){
+    public Transfer receiveAmount(@RequestBody Transfer transfer,Principal principal){           //Pending request
         Transfer newTransfer = new Transfer();
-        if(transfer.getAmount()>0 && (!principal.getName().equals(transfer.getUsernameTo()))) {
+        if(transfer.getAmount().doubleValue()>0.00 && (!principal.getName().equals(transfer.getUsernameTo()))) {
             transfer.setTransferStatusId(1); //Pending
             transfer.setTransferTypeId(1); // Requesting money
             newTransfer = transferDao.createTransferByUserName(transfer,principal);
@@ -95,10 +96,10 @@ public class TransactionController {
     }
 
     @RequestMapping(path = "/transfer/pending", method = RequestMethod.GET)
-    public List<Transfer> getListOfPendingTransfers(){
+    public List<Transfer> getListOfPendingTransfers(Principal principal){
 
         try {
-            return transferDao.getListOfTransfersByPending();
+            return transferDao.getListOfTransfersByPending(principal);
         }catch(DaoException e){
             throw new ResponseStatusException(HttpStatus.NOT_FOUND);
         }
@@ -106,22 +107,31 @@ public class TransactionController {
 
 
     @RequestMapping(path = "/transfer/request", method = RequestMethod.PUT)
-     public Transfer responseToRequest(@RequestBody Transfer transfer,Principal principal){
-        Transfer newTransfer = new Transfer();
+     public int updatePendingRequest(@RequestBody Transfer transfer,Principal principal){
+        int success = 0;
         User userFrom = userDao.getUserByUsername(principal.getName());
         Account accountFrom = accountDao.getAccountbyUserId(userFrom.getId());
-        if(accountFrom.getBalance() < transfer.getAmount()){
-            transfer.setTransferStatusId(3); //Rejected
-        }else{
-            transfer.setTransferStatusId(2);//Approved
-            User userRequester = userDao.getUserByUsername(transfer.getUsernameTo());
-            Account accountRequester = accountDao.getAccountbyUserId(userRequester.getId());
-            accountRequester.setIncreasedBalance(transfer.getAmount());
+        if(transfer.getTransferStatusName().equalsIgnoreCase("Approved")) {
+            if (accountFrom.getBalance().compareTo(transfer.getAmount()) < 0) {
+                transfer.setTransferStatusId(3); //Rejected
+               // transfer.setTransferStatusName("Rejected");
+                transferDao.updateTransfer(transfer);
 
-            accountFrom.setDecreasedBalance(transfer.getAmount());
-            newTransfer = transferDao.createTransferByUserName(transfer,principal);
+            } else {
+                transfer.setTransferStatusId(2);//Approved
+                //transfer.setTransferStatusName("Approved");
+                User userRequester = userDao.getUserByUsername(transfer.getUsernameTo());
+                Account accountRequester = accountDao.getAccountbyUserId(userRequester.getId());
+                accountRequester.setIncreasedBalance(transfer.getAmount());
+                accountDao.updateAccountBalance(accountRequester);// Increases the balance in DB
+
+                accountFrom.setDecreasedBalance(transfer.getAmount());
+                accountDao.updateAccountBalance(accountFrom);//        Decreases the balance in DB
+                transferDao.updateTransfer(transfer);
+                success = 1;
+            }
         }
-        return newTransfer;
+        return success;
     }
 
 

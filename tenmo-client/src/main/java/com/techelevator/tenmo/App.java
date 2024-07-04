@@ -1,10 +1,14 @@
 package com.techelevator.tenmo;
 
 import com.techelevator.tenmo.model.AuthenticatedUser;
+import com.techelevator.tenmo.model.Transfer;
 import com.techelevator.tenmo.model.UserCredentials;
 import com.techelevator.tenmo.services.AccountService;
 import com.techelevator.tenmo.services.AuthenticationService;
 import com.techelevator.tenmo.services.ConsoleService;
+
+import javax.sql.rowset.spi.TransactionalWriter;
+import java.math.BigDecimal;
 
 public class App {
 
@@ -89,28 +93,90 @@ public class App {
     }
 
 	private void viewCurrentBalance() {
-		// TODO Auto-generated method stub
-		
+		String name = consoleService.promptForString("Please enter your username : ");
+        System.out.println("Your current balance is : " + accountService.getCurrentBalanceByUsername(name));
+
 	}
 
 	private void viewTransferHistory() {
-		// TODO Auto-generated method stub
+	Transfer[] transfers =	accountService.listOfTansfersSentOrReceived();
+        System.out.println("Here are your list of transfers: ");
+
+        try {
+            for (int i = 0; i < transfers.length; i++) {
+                System.out.println(transfers[i]);
+            }
+        }catch(NullPointerException e){
+            System.out.println("Sorry, there are no transactions");
+        }
 		
 	}
 
 	private void viewPendingRequests() {
-		// TODO Auto-generated method stub
-		
+        Transfer[] transfers =	accountService.listOfPendingTransfers();
+        System.out.println("Here are your list of pending transfers: ");
+        Transfer decisionTransfer = null;
+            int success = -1;
+        try {
+            for (int i = 0; i < transfers.length; i++) {
+                System.out.println(transfers[i].toString());
+
+            }
+        }catch(NullPointerException e){
+            System.out.println("Sorry, there are no pending transactions");
+        }
+        int id  = consoleService.promptForInt("Please choose the transfer ID: ");
+       String option = consoleService.promptForString("Please choose the transfer to approved or rejected: ");
+        for (int i = 0; i < transfers.length ; i++) {
+            if(transfers[i].getId() == id){
+                decisionTransfer = transfers[i];
+            }
+        }
+        if(option.equalsIgnoreCase("Approved")){
+            decisionTransfer.setTransferStatusName(option);
+           success =  accountService.receivedAmount(decisionTransfer);
+        }else{
+            decisionTransfer.setTransferStatusName(option);
+            success = accountService.receivedAmount(decisionTransfer);
+        }
+
+		if(success == 1){
+            System.out.println("The request was successful");
+        }else{
+            System.out.println("The request has failed");
+        }
+
 	}
 
 	private void sendBucks() {
-		// TODO Auto-generated method stub
+        System.out.println("Here are the list of Users to choose from : ");
+        System.out.println(accountService.getListOfUsers());
+
+        String name	= consoleService.promptForString("Please choose a username from the list: ");
+         BigDecimal amount = consoleService.promptForBigDecimal("Please enter the amount: ");
+
+        Transfer transfer = new Transfer(0,currentUser.getUser().getUsername(),name, amount, "Approved","Send");
+
+       Transfer receivedTransfer =  accountService.sendAmount(transfer);
+        if(receivedTransfer != null) {
+            System.out.println(amount + " has been sent to " + name);
+        }else{
+            System.out.println("Sorry, your transfer didn't go through");
+        }
 		
 	}
 
 	private void requestBucks() {
-		// TODO Auto-generated method stub
-		
+        System.out.println("Here are the list of Users to choose from : ");
+        System.out.println(accountService.getListOfUsers());
+
+        String name	= consoleService.promptForString("Please choose a username from the list: ");
+        BigDecimal amount = consoleService.promptForBigDecimal("Please enter the amount: ");
+
+        Transfer transfer = new Transfer(0,currentUser.getUser().getUsername(),name, amount, "Pending","Request");
+
+        System.out.println("Your request for " + amount + " is pending. " + name + " is waiting to confirm transfer." );
+
 	}
 
 }
