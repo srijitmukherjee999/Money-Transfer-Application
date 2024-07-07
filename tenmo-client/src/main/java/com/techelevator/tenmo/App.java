@@ -116,7 +116,7 @@ public class App {
         Transfer[] transfers =	accountService.listOfPendingTransfers();
         System.out.println("Here are your list of pending transfers: ");
         Transfer decisionTransfer = null;
-            int success;
+            int success = -2;
         try {
             for (int i = 0; i < transfers.length; i++) {
                 System.out.println(transfers[i].toString());
@@ -131,19 +131,24 @@ public class App {
         for (int i = 0; i < transfers.length ; i++) {
             if(transfers[i].getId() == id){
                 decisionTransfer = transfers[i];
+
             }
         }
-        if(option.equalsIgnoreCase("Approved")){
-            decisionTransfer.setTransferStatusName(option);
-           success =  accountService.receivedAmount(decisionTransfer);
-        }else{
-            decisionTransfer.setTransferStatusName(option);
-            success = accountService.receivedAmount(decisionTransfer);
+        try {
+            if (option.equalsIgnoreCase("Approved")) {
+                decisionTransfer.setTransferStatusName(option);
+                success = accountService.receivedAmount(decisionTransfer);
+            } else {
+                decisionTransfer.setTransferStatusName(option);
+                success = accountService.receivedAmount(decisionTransfer);
+            }
+        }catch(NullPointerException e){
+            System.out.println("The Transfer ID doesn't exist");
         }
 
 		if(success == 1){
             System.out.println("The transfer has been approved!");
-        }else{
+        }else if (success == 2){
             System.out.println("The transfer has been rejected");
         }
 

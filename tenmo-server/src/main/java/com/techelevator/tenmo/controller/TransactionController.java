@@ -112,30 +112,40 @@ public class TransactionController {
     @RequestMapping(path = "/transfer/request", method = RequestMethod.PUT)
      public int updatePendingRequest(@RequestBody Transfer transfer,Principal principal){
         int success = 0;
+        int x = 1;
         User userFrom = userDao.getUserByUsername(principal.getName());
         Account accountFrom = accountDao.getAccountbyUserId(userFrom.getId());
-        if(transfer.getTransferStatusName().equalsIgnoreCase("Approved")) {
-            if (accountFrom.getBalance().compareTo(transfer.getAmount()) < 0) {
-                transfer.setTransferStatusId(3); //Rejected
-               // transfer.setTransferStatusName("Rejected");
-                transferDao.updateTransfer(transfer);
+        for (int i = 0; i < getListOfPendingTransfers(principal).size(); i++) {
+          if (getListOfPendingTransfers(principal).get(i).getId() != transfer.getId()){
+              x = 0;
+          }
+        }
+        if(x>0) {
+            if (transfer.getTransferStatusName().equalsIgnoreCase("Approved")) {
+                if (accountFrom.getBalance().compareTo(transfer.getAmount()) < 0) {
+                    transfer.setTransferStatusId(3); //Rejected
+                    // transfer.setTransferStatusName("Rejected");
+                    transferDao.updateTransfer(transfer);
 
+                } else {
+                    transfer.setTransferStatusId(2);//Approved
+                    //transfer.setTransferStatusName("Approved");
+                    User userRequester = userDao.getUserByUsername(transfer.getUsernameTo());
+                    Account accountRequester = accountDao.getAccountbyUserId(userRequester.getId());
+                    accountRequester.setIncreasedBalance(transfer.getAmount());
+                    accountDao.updateAccountBalance(accountRequester);// Increases the balance in DB
+
+                    accountFrom.setDecreasedBalance(transfer.getAmount());
+                    accountDao.updateAccountBalance(accountFrom);//        Decreases the balance in DB
+                    transferDao.updateTransfer(transfer);
+                    success = 1;
+                }
             } else {
-                transfer.setTransferStatusId(2);//Approved
-                //transfer.setTransferStatusName("Approved");
-                User userRequester = userDao.getUserByUsername(transfer.getUsernameTo());
-                Account accountRequester = accountDao.getAccountbyUserId(userRequester.getId());
-               accountRequester.setIncreasedBalance(transfer.getAmount());
-               accountDao.updateAccountBalance(accountRequester);// Increases the balance in DB
-
-               accountFrom.setDecreasedBalance(transfer.getAmount());
-               accountDao.updateAccountBalance(accountFrom);//        Decreases the balance in DB
+                transfer.setTransferStatusId(3); //Rejected
                 transferDao.updateTransfer(transfer);
-                success = 1;
             }
         }else{
-            transfer.setTransferStatusId(3); //Rejected
-            transferDao.updateTransfer(transfer);
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND,"The transfer id doesn't exist");
         }
 
         return success;
