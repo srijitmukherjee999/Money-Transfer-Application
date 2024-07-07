@@ -118,7 +118,7 @@ public class App {
                 System.out.println("Sorry, there are no transfers");
             }
             if(y == 0){
-                System.out.println("Sorry there are no transfers ");
+                System.out.println("Sorry, there are no transfers ");
             }
         } else if(decision == 2) {
             Transfer[] pendingTransfers = accountService.listOfPendingTransfers();
