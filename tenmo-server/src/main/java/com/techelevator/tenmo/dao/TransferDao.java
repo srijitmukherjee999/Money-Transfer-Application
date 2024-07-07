@@ -13,10 +13,12 @@ public interface TransferDao {
     List<Transfer> getListOfTransfersBySentOrReceived(Principal principal);
     Transfer getTransferbyUserId(int userId);
     Transfer createTransferByUserName(Transfer transfer, Principal principal);
-    //Transfer createReceiveTransferByUserName(String name, Transfer transfer, Principal principal);
+
 
     List<Transfer> getListOfTransfersByPending(Principal principal);
     void updateTransfer(Transfer transfer);
+    List<Transfer> getListOfTransfersToApproveOrReject(Principal principal);
+
 
 
 }

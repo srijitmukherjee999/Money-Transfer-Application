@@ -119,6 +119,33 @@ public class JdbcTransferDao implements TransferDao{
         return listOfTransfers;
     }
 
+    @Override
+    public List<Transfer> getListOfTransfersToApproveOrReject(Principal principal) {
+
+        List<Transfer> listOfTransfers = new ArrayList<>();
+        String sql = "SELECT transfer_id,tbluser_from.username as username_from, tble2tenmo_user.username as username_to,amount, transfer_type_id,transfer_status_id,transfer_status_desc,transfer_type_desc from " +
+                "transfer JOIN " +
+                "account as tblaccount_from on account_from=tblaccount_from.account_id JOIN " +
+                "tenmo_user as tbluser_from on tblaccount_from.user_id=tbluser_from.user_id " +
+                "JOIN account as tbl2account_from on account_to = tbl2account_from.account_id " +
+                "JOIN tenmo_user AS tble2tenmo_user on tbl2account_from.user_id = tble2tenmo_user.user_id JOIN transfer_type USING(transfer_type_id)" +
+                "JOIN transfer_status USING(transfer_status_id) WHERE transfer_status_desc = 'Pending' AND tble2tenmo_user.username = ? ;";
+        try{
+            SqlRowSet results = jdbcTemplate.queryForRowSet(sql,principal.getName());
+            while(results.next()){
+                listOfTransfers.add(mapByRow(results));
+            }
+        }catch(DataIntegrityViolationException e) {
+            throw new DaoException("That park is already in that state!", e);
+        } catch (CannotGetJdbcConnectionException e) {
+            throw new DaoException("Database not found!", e);
+        }
+
+        return listOfTransfers;
+    }
+
+
+
     public void updateTransfer(Transfer transfer){
         String sql = "UPDATE transfer SET transfer_status_id = ? WHERE transfer_id = ? ;";
 

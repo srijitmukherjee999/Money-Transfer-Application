@@ -126,12 +126,23 @@ public class AccountService {
       HttpEntity<Transfer> entity = new HttpEntity<>(transfer,headers);
 
       try{
-         HttpEntity<Integer> response =restTemplate.exchange(url + "/transfer/request",HttpMethod.PUT,entity,int.class);
+         HttpEntity<Integer> response = restTemplate.exchange(url + "/transfer/request",HttpMethod.PUT,entity,int.class);
              success = response.getBody();
       }catch (RestClientResponseException | ResourceAccessException e) {
           BasicLogger.log(e.getMessage());
       }
       return success;
+    }
+
+    public Transfer[] listOfTransfersToApproveOrReject(){
+        Transfer[] newTransfer = null;
+        try{
+            ResponseEntity<Transfer[]> response = restTemplate.exchange(url + "/transfer/decision", HttpMethod.GET,makeAuthEntity(),Transfer[].class);
+            newTransfer = response.getBody();
+        }catch (RestClientResponseException | ResourceAccessException e) {
+            BasicLogger.log(e.getMessage());
+        }
+        return newTransfer;
     }
 
 

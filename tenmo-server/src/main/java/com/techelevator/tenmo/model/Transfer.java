@@ -14,19 +14,6 @@ public class Transfer {
     private String transferTypeName;
 
 
-//    public Transfer(int id, int transferTypeId, int transferStatusId, String usernameFrom, String usernameTo, BigDecimal amount, String transferStatusName, String transferTypeName) {
-//        this.id = id;
-//        this.transferTypeId = transferTypeId;
-//        this.transferStatusId = transferStatusId;
-//        this.usernameFrom = usernameFrom;
-//        this.usernameTo= usernameTo;
-//        this.amount = amount;
-//        this.transferStatusName = transferStatusName;
-//        this.transferTypeName = transferTypeName;
-//
-//    }
-   public Transfer(){};
-
     public int getId() {
         return id;
     }

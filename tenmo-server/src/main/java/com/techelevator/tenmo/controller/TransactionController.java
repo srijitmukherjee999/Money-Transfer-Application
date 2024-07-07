@@ -24,39 +24,40 @@ public class TransactionController {
     private TransferDao transferDao;
     private UserDao userDao;
 
-    public TransactionController(JdbcAccountDao jdbcAccountDao, JdbcTransferDao jdbcTransferDao,JdbcUserDao jdbcUserDao){
+    public TransactionController(JdbcAccountDao jdbcAccountDao, JdbcTransferDao jdbcTransferDao, JdbcUserDao jdbcUserDao) {
         this.accountDao = jdbcAccountDao;
         this.transferDao = jdbcTransferDao;
         this.userDao = jdbcUserDao;
     }
 
     @RequestMapping(path = "/account/balance", method = RequestMethod.GET)
-    public BigDecimal getAccountBalance(@RequestParam String name){
+    public BigDecimal getAccountBalance(@RequestParam String name) {
         try {
             BigDecimal balance = accountDao.getAccountBalanceByUsername(name);
             return balance;
-        }catch(DaoException e){
+        } catch (DaoException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Account unavailable");
         }
 
     }
 
     @RequestMapping(path = "/tenmo_user", method = RequestMethod.GET)
-    public List<User> getListOfUsers(){
+    public List<User> getListOfUsers() {
         return userDao.getUsers();
     }
+
     @ResponseStatus(HttpStatus.CREATED)
-    @RequestMapping(path = "/transfer/send", method =  RequestMethod.POST)
-    public Transfer sendAmount(@RequestBody Transfer transfer, Principal principal){
+    @RequestMapping(path = "/transfer/send", method = RequestMethod.POST)
+    public Transfer sendAmount(@RequestBody Transfer transfer, Principal principal) {
         Transfer newTransfer = null;
         User userFrom = userDao.getUserByUsername(principal.getName());
         Account accountFrom = accountDao.getAccountbyUserId(userFrom.getId());
-        if(transfer.getAmount().doubleValue()>0.00 && (!principal.getName().equals(transfer.getUsernameTo())) && transfer.getAmount().compareTo(accountFrom.getBalance())<=0 ) {
+        if (transfer.getAmount().doubleValue() > 0.00 && (!principal.getName().equals(transfer.getUsernameTo())) && transfer.getAmount().compareTo(accountFrom.getBalance()) <= 0) {
 
-           User user = userDao.getUserByUsername(transfer.getUsernameTo());
-           Account account = accountDao.getAccountbyUserId(user.getId());
-             account.setIncreasedBalance(transfer.getAmount());
-             accountDao.updateAccountBalance(account);//updates account balance in DB
+            User user = userDao.getUserByUsername(transfer.getUsernameTo());
+            Account account = accountDao.getAccountbyUserId(user.getId());
+            account.setIncreasedBalance(transfer.getAmount());
+            accountDao.updateAccountBalance(account);//updates account balance in DB
 
             accountFrom.setDecreasedBalance(transfer.getAmount());
             accountDao.updateAccountBalance(accountFrom);//updates account balance in DB
@@ -64,7 +65,7 @@ public class TransactionController {
             transfer.setTransferTypeId(2); // Sending money
             newTransfer = transferDao.createTransferByUserName(transfer, principal);
 
-        }else{
+        } else {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
         }
 
@@ -72,38 +73,49 @@ public class TransactionController {
 
     }
 
-    @RequestMapping(path = "/transfer",method = RequestMethod.GET)
-    public List<Transfer> getListOfTransfers(Principal principal){
+    @RequestMapping(path = "/transfer", method = RequestMethod.GET)
+    public List<Transfer> getListOfTransfers(Principal principal) {
         return transferDao.getListOfTransfersBySentOrReceived(principal);
     }
 
-    @RequestMapping(path = "/transfer/{id}",method = RequestMethod.GET)
-    public Transfer getTransferById(@PathVariable int id){
+    @RequestMapping(path = "/transfer/{id}", method = RequestMethod.GET)
+    public Transfer getTransferById(@PathVariable int id) {
 
         try {
             return transferDao.getTransferById(id);
-        }catch (DaoException e){
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND,"Wrong transaction id");
+        } catch (DaoException e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Wrong transaction id");
         }
     }
 
     @RequestMapping(path = "/transfer/request", method = RequestMethod.POST)
-    public Transfer receiveAmount(@RequestBody Transfer transfer,Principal principal){           //Pending request
+    public Transfer receiveAmount(@RequestBody Transfer transfer, Principal principal) {           //Pending request
         Transfer newTransfer = new Transfer();
-        if(transfer.getAmount().doubleValue()>0.00 && (!principal.getName().equals(transfer.getUsernameTo()))) {
+        if (transfer.getAmount().doubleValue() > 0.00 && (!principal.getName().equals(transfer.getUsernameTo()))) {
             transfer.setTransferStatusId(1); //Pending
             transfer.setTransferTypeId(1); // Requesting money
-            newTransfer = transferDao.createTransferByUserName(transfer,principal);
+            newTransfer = transferDao.createTransferByUserName(transfer, principal);
         }
         return newTransfer;
     }
 
     @RequestMapping(path = "/transfer/pending", method = RequestMethod.GET)
-    public List<Transfer> getListOfPendingTransfers(Principal principal){
+    public List<Transfer> getListOfPendingTransfers(Principal principal) {
 
         try {
             return transferDao.getListOfTransfersByPending(principal);
-        }catch(DaoException e){
+        } catch (DaoException e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        }
+    }
+
+
+    @RequestMapping(path = "/transfer/decision",method = RequestMethod.GET)
+    public List<Transfer> getListOfTransfersToApproveOrReject(Principal principal) {
+
+        try {
+            return transferDao.getListOfTransfersToApproveOrReject(principal);
+        } catch (DaoException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND);
         }
     }
@@ -112,28 +124,23 @@ public class TransactionController {
     @RequestMapping(path = "/transfer/request", method = RequestMethod.PUT)
      public int updatePendingRequest(@RequestBody Transfer transfer,Principal principal){
         int success = 0;
-        int x = 1;
+
         User userFrom = userDao.getUserByUsername(principal.getName());
         Account accountFrom = accountDao.getAccountbyUserId(userFrom.getId());
-        for (int i = 0; i < getListOfPendingTransfers(principal).size(); i++) {
-          if (getListOfPendingTransfers(principal).get(i).getId() != transfer.getId()){
-              x = 0;
-          }
-        }
-        if(x>0) {
-            if (transfer.getTransferStatusName().equalsIgnoreCase("Approved")) {
+
+
+        if (transfer.getTransferStatusName().equalsIgnoreCase("Approved")) {
                 if (accountFrom.getBalance().compareTo(transfer.getAmount()) < 0) {
                     transfer.setTransferStatusId(3); //Rejected
-                    // transfer.setTransferStatusName("Rejected");
+
                     transferDao.updateTransfer(transfer);
 
                 } else {
                     transfer.setTransferStatusId(2);//Approved
-                    //transfer.setTransferStatusName("Approved");
                     User userRequester = userDao.getUserByUsername(transfer.getUsernameTo());
                     Account accountRequester = accountDao.getAccountbyUserId(userRequester.getId());
                     accountRequester.setIncreasedBalance(transfer.getAmount());
-                    accountDao.updateAccountBalance(accountRequester);// Increases the balance in DB
+                    accountDao.updateAccountBalance(accountRequester);//    Increases the balance in DB
 
                     accountFrom.setDecreasedBalance(transfer.getAmount());
                     accountDao.updateAccountBalance(accountFrom);//        Decreases the balance in DB
@@ -142,11 +149,10 @@ public class TransactionController {
                 }
             } else {
                 transfer.setTransferStatusId(3); //Rejected
+
                 transferDao.updateTransfer(transfer);
             }
-        }else{
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND,"The transfer id doesn't exist");
-        }
+
 
         return success;
     }

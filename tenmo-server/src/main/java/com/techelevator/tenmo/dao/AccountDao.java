@@ -7,12 +7,10 @@ import java.util.List;
 
 public interface AccountDao {
 
-   // Account getAccountbyId();
 
-   // List<Account> getAccounts();
     BigDecimal getAccountBalanceByUsername(String name);
     Account getAccountbyUserId(int userId);
-   // Account getAccountbyUserName(String name);
+
 
     void updateAccountBalance(Account account);
 
