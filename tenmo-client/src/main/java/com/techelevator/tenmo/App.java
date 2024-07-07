@@ -100,13 +100,13 @@ public class App {
 	}
 
 	private void viewTransferHistory() {
-        System.out.println("1. List of transfers.");
+        System.out.println("1. List of Transfers.");
         System.out.println("2. List of Pending Transfers.");
         int decision = consoleService.promptForInt("Please choose 1 for list of transfers or 2 for pending transfers: ");
         int y = 0;
         if(decision == 1 ) {
             Transfer[] transfers = accountService.listOfTansfersSentOrReceived();
-            System.out.println("Here are your list of transfers: ");
+            System.out.println("Here are your list of Transfers: ");
 
             try {
                 for (int i = 0; i < transfers.length; i++) {
@@ -123,8 +123,7 @@ public class App {
         } else if(decision == 2) {
             Transfer[] pendingTransfers = accountService.listOfPendingTransfers();
             System.out.println("Here are your list of pending transfers: ");
-            Transfer decisionTransfer = null;
-            int success = 2;
+
             int x = 0;
             try {
                 for (int i = 0; i < pendingTransfers.length; i++) {
@@ -166,21 +165,14 @@ public class App {
             for (int i = 0; i < transfers.length; i++) {
                 if (transfers[i].getId() == id) {
                     decisionTransfer = transfers[i];
-
                 }
             }
             try {
-                if (option.equalsIgnoreCase("Approved")) {
                     decisionTransfer.setTransferStatusName(option);
                     success = accountService.receivedAmount(decisionTransfer);
-                } else {
-                    decisionTransfer.setTransferStatusName(option);
-                    success = accountService.receivedAmount(decisionTransfer);
-                }
             } catch (NullPointerException e) {
                 System.out.println("The transfer ID doesn't exist");
             }
-
             if (success == 1) {
                 System.out.println("The transfer has been approved!");
             } else if (success == 0){

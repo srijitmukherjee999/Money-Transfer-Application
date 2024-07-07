@@ -137,7 +137,7 @@ public class TransactionController {
 
                 } else {
                     transfer.setTransferStatusId(2);//Approved
-                    User userRequester = userDao.getUserByUsername(transfer.getUsernameTo());
+                    User userRequester = userDao.getUserByUsername(transfer.getUsernameFrom());
                     Account accountRequester = accountDao.getAccountbyUserId(userRequester.getId());
                     accountRequester.setIncreasedBalance(transfer.getAmount());
                     accountDao.updateAccountBalance(accountRequester);//    Increases the balance in DB
