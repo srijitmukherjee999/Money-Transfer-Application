@@ -103,16 +103,22 @@ public class App {
         System.out.println("1. List of transfers.");
         System.out.println("2. List of Pending Transfers.");
         int decision = consoleService.promptForInt("Please choose 1 for list of transfers or 2 for pending transfers: ");
+        int y = 0;
         if(decision == 1 ) {
             Transfer[] transfers = accountService.listOfTansfersSentOrReceived();
             System.out.println("Here are your list of transfers: ");
 
             try {
                 for (int i = 0; i < transfers.length; i++) {
-                    System.out.println(transfers[i]);
+                    String output = transfers[i].toString();
+                    System.out.println(output);
+                    y = 1 ;
                 }
             } catch (NullPointerException e) {
-                System.out.println("Sorry, there are no transactions");
+                System.out.println("Sorry, there are no transfers");
+            }
+            if(y == 0){
+                System.out.println("Sorry there are no transfers ");
             }
         } else if(decision == 2) {
             Transfer[] pendingTransfers = accountService.listOfPendingTransfers();
@@ -127,10 +133,10 @@ public class App {
                     x = 1;
                 }
             } catch (NullPointerException e) {
-                System.out.println("Sorry, there are no pending transactions");
+                System.out.println("Sorry, there are no pending transfers");
             }
             if (x == 0) {
-                System.out.println("Sorry, you have no pending transactions");
+                System.out.println("Sorry, you have no pending transfers");
             }
         }else{
             System.out.println("Please choose between the two options provided");
@@ -150,10 +156,10 @@ public class App {
                 x = 1;
             }
         } catch (NullPointerException e) {
-            System.out.println("Sorry, there are no pending transactions");
+            System.out.println("Sorry, there are no pending transfers");
         }
         if (x == 0) {
-            System.out.println("Sorry, you have no pending transactions");
+            System.out.println("Sorry, you have no pending transfers");
         } else {
             int id = consoleService.promptForInt("Please choose the transfer ID: ");
             String option = consoleService.promptForString("Please choose the transfer to be approved or rejected: ");
