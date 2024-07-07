@@ -64,6 +64,8 @@ public class TransactionController {
             transfer.setTransferTypeId(2); // Sending money
             newTransfer = transferDao.createTransferByUserName(transfer, principal);
 
+        }else{
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
         }
 
         return newTransfer;
@@ -123,15 +125,19 @@ public class TransactionController {
                 //transfer.setTransferStatusName("Approved");
                 User userRequester = userDao.getUserByUsername(transfer.getUsernameTo());
                 Account accountRequester = accountDao.getAccountbyUserId(userRequester.getId());
-               // accountRequester.setIncreasedBalance(transfer.getAmount());
-               // accountDao.updateAccountBalance(accountRequester);// Increases the balance in DB
+               accountRequester.setIncreasedBalance(transfer.getAmount());
+               accountDao.updateAccountBalance(accountRequester);// Increases the balance in DB
 
-               // accountFrom.setDecreasedBalance(transfer.getAmount());
-               // accountDao.updateAccountBalance(accountFrom);//        Decreases the balance in DB
+               accountFrom.setDecreasedBalance(transfer.getAmount());
+               accountDao.updateAccountBalance(accountFrom);//        Decreases the balance in DB
                 transferDao.updateTransfer(transfer);
                 success = 1;
             }
+        }else{
+            transfer.setTransferStatusId(3); //Rejected
+            transferDao.updateTransfer(transfer);
         }
+
         return success;
     }
 

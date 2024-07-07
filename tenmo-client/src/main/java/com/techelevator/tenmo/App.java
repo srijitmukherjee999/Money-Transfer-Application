@@ -127,7 +127,7 @@ public class App {
         }
 
         int id  = consoleService.promptForInt("Please choose the transfer ID: ");
-       String option = consoleService.promptForString("Please choose the transfer to approved or rejected: ");
+       String option = consoleService.promptForString("Please choose the transfer to be approved or rejected: ");
         for (int i = 0; i < transfers.length ; i++) {
             if(transfers[i].getId() == id){
                 decisionTransfer = transfers[i];
