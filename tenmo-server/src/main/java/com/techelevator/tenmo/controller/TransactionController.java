@@ -65,6 +65,7 @@ public class TransactionController {
             newTransfer = transferDao.createTransferByUserName(transfer, principal);
 
         }
+
         return newTransfer;
 
     }
@@ -122,11 +123,11 @@ public class TransactionController {
                 //transfer.setTransferStatusName("Approved");
                 User userRequester = userDao.getUserByUsername(transfer.getUsernameTo());
                 Account accountRequester = accountDao.getAccountbyUserId(userRequester.getId());
-                accountRequester.setIncreasedBalance(transfer.getAmount());
-                accountDao.updateAccountBalance(accountRequester);// Increases the balance in DB
+               // accountRequester.setIncreasedBalance(transfer.getAmount());
+               // accountDao.updateAccountBalance(accountRequester);// Increases the balance in DB
 
-                accountFrom.setDecreasedBalance(transfer.getAmount());
-                accountDao.updateAccountBalance(accountFrom);//        Decreases the balance in DB
+               // accountFrom.setDecreasedBalance(transfer.getAmount());
+               // accountDao.updateAccountBalance(accountFrom);//        Decreases the balance in DB
                 transferDao.updateTransfer(transfer);
                 success = 1;
             }

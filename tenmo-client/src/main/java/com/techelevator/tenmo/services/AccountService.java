@@ -42,6 +42,7 @@ public class AccountService {
         try {
             ResponseEntity<User[]> response = restTemplate.exchange(url + "/tenmo_user", HttpMethod.GET,makeAuthEntity(),User[].class );
             user = response.getBody();
+
         }catch (RestClientResponseException | ResourceAccessException e) {
             BasicLogger.log(e.getMessage());
         }

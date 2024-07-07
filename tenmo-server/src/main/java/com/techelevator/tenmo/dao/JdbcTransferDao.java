@@ -87,10 +87,10 @@ public class JdbcTransferDao implements TransferDao{
       String sql = "INSERT INTO transfer (transfer_type_id , transfer_status_id, account_from,account_to,amount) " +
               "VALUES (?,?,(  SELECT account_id FROM tenmo_user JOIN account USING(user_id) WHERE username = ?), " +
               "(SELECT account_id FROM tenmo_user JOIN account USING (user_id) WHERE username = ?),?)  RETURNING transfer_id ;";
-       int update = jdbcTemplate.queryForObject(sql,int.class, transfer.getTransferTypeId(),transfer.getTransferStatusId(),
+       int pk = jdbcTemplate.queryForObject(sql,int.class, transfer.getTransferTypeId(),transfer.getTransferStatusId(),
                principal.getName(),transfer.getUsernameTo(),transfer.getAmount());
 
-       transfer1 = getTransferById(update);
+       transfer1 = getTransferById(pk);
        return transfer1;
     }
 

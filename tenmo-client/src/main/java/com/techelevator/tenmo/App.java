@@ -2,6 +2,7 @@ package com.techelevator.tenmo;
 
 import com.techelevator.tenmo.model.AuthenticatedUser;
 import com.techelevator.tenmo.model.Transfer;
+import com.techelevator.tenmo.model.User;
 import com.techelevator.tenmo.model.UserCredentials;
 import com.techelevator.tenmo.services.AccountService;
 import com.techelevator.tenmo.services.AuthenticationService;
@@ -93,8 +94,7 @@ public class App {
     }
 
 	private void viewCurrentBalance() {
-		String name = consoleService.promptForString("Please enter your username : ");
-        System.out.println("Your current balance is : " + accountService.getCurrentBalanceByUsername(name));
+        System.out.println("Your current balance is : " + accountService.getCurrentBalanceByUsername(currentUser.getUser().getUsername()));
 
 	}
 
@@ -116,7 +116,7 @@ public class App {
         Transfer[] transfers =	accountService.listOfPendingTransfers();
         System.out.println("Here are your list of pending transfers: ");
         Transfer decisionTransfer = null;
-            int success = -1;
+            int success;
         try {
             for (int i = 0; i < transfers.length; i++) {
                 System.out.println(transfers[i].toString());
@@ -125,6 +125,7 @@ public class App {
         }catch(NullPointerException e){
             System.out.println("Sorry, there are no pending transactions");
         }
+
         int id  = consoleService.promptForInt("Please choose the transfer ID: ");
        String option = consoleService.promptForString("Please choose the transfer to approved or rejected: ");
         for (int i = 0; i < transfers.length ; i++) {
@@ -141,16 +142,21 @@ public class App {
         }
 
 		if(success == 1){
-            System.out.println("The request was successful");
+            System.out.println("The transfer has been approved!");
         }else{
-            System.out.println("The request has failed");
+            System.out.println("The transfer has been rejected");
         }
 
 	}
 
 	private void sendBucks() {
         System.out.println("Here are the list of Users to choose from : ");
-        System.out.println(accountService.getListOfUsers());
+       User[] user = accountService.getListOfUsers();
+
+        for (int i = 0; i <user.length ; i++) {
+            System.out.println(user[i].getUsername());
+        }
+
 
         String name	= consoleService.promptForString("Please choose a username from the list: ");
          BigDecimal amount = consoleService.promptForBigDecimal("Please enter the amount: ");

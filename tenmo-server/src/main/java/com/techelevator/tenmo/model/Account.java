@@ -12,7 +12,7 @@ public class Account {
 //        this.userId = userId;
 //        this.balance = balance;
 //    }
-    //public Account(){};
+    public Account(){};
 
     public int getId() {
         return id;
@@ -38,9 +38,9 @@ public class Account {
         this.balance = balance;
     }
     public void setIncreasedBalance(BigDecimal balance){
-         this.balance.add(balance);
+       this.balance = this.balance.add(balance);
     }
     public void setDecreasedBalance(BigDecimal balance){
-        this.balance.subtract(balance);
+        this.balance = this.balance.subtract(balance);
     }
 }
