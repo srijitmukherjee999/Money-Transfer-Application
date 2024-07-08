@@ -95,7 +95,7 @@ public class App {
     }
 
 	private void viewCurrentBalance() {
-        System.out.println("Your current balance is : " + accountService.getCurrentBalanceByUsername(currentUser.getUser().getUsername()));
+        System.out.println("Your current account balance is: " + accountService.getCurrentBalanceByUsername(currentUser.getUser().getUsername()));
 
 	}
 

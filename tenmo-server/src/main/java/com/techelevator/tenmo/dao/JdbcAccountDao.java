@@ -31,9 +31,9 @@ public class JdbcAccountDao implements AccountDao {
                 account = mapByRow(results);
             }
         }  catch(DataIntegrityViolationException e) {
-        throw new DaoException("That park is already in that state!", e);
+        throw new DaoException("Data integrity violation", e);
      } catch (CannotGetJdbcConnectionException e) {
-        throw new DaoException("Database not found!", e);
+        throw new DaoException("Unable to connect to server or database", e);
     }
         return account.getBalance();
     }
@@ -48,9 +48,9 @@ public class JdbcAccountDao implements AccountDao {
                 account = mapByRow(results);
             }
         }  catch(DataIntegrityViolationException e) {
-            throw new DaoException("That park is already in that state!", e);
+            throw new DaoException("Data integrity violation", e);
         } catch (CannotGetJdbcConnectionException e) {
-            throw new DaoException("Database not found!", e);
+            throw new DaoException("Unable to connect to server or database", e);
         }
         return account;
 

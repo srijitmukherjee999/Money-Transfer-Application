@@ -40,9 +40,9 @@ public class JdbcTransferDao implements TransferDao{
                 transfer = mapByRow(results);
             }
         } catch(DataIntegrityViolationException e) {
-            throw new DaoException("That park is already in that state!", e);
+            throw new DaoException("Data integrity violation", e);
         } catch (CannotGetJdbcConnectionException e) {
-            throw new DaoException("Database not found!", e);
+            throw new DaoException("Unable to connect to server or database", e);
         }
         return transfer;
     }
@@ -64,9 +64,9 @@ public class JdbcTransferDao implements TransferDao{
                 listOfTransfers.add(mapByRow(results));
             }
         }catch(DataIntegrityViolationException e) {
-            throw new DaoException("That park is already in that state!", e);
+            throw new DaoException("Data integrity violation", e);
         } catch (CannotGetJdbcConnectionException e) {
-            throw new DaoException("Database not found!", e);
+            throw new DaoException("Unable to connect to server or database", e);
         }
 
         return listOfTransfers;
@@ -111,9 +111,9 @@ public class JdbcTransferDao implements TransferDao{
                 listOfTransfers.add(mapByRow(results));
             }
         }catch(DataIntegrityViolationException e) {
-            throw new DaoException("That park is already in that state!", e);
+            throw new DaoException("Data integrity violation", e);
         } catch (CannotGetJdbcConnectionException e) {
-            throw new DaoException("Database not found!", e);
+            throw new DaoException("Unable to connect to server or database", e);
         }
 
         return listOfTransfers;
@@ -136,9 +136,9 @@ public class JdbcTransferDao implements TransferDao{
                 listOfTransfers.add(mapByRow(results));
             }
         }catch(DataIntegrityViolationException e) {
-            throw new DaoException("That park is already in that state!", e);
+            throw new DaoException("Data integrity violation", e);
         } catch (CannotGetJdbcConnectionException e) {
-            throw new DaoException("Database not found!", e);
+            throw new DaoException("Unable to connect to server or database", e);
         }
 
         return listOfTransfers;
